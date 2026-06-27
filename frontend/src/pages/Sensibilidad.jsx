@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip } from 'chart.js';
+import { exportToPdf } from '../components/pdfExport.js';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
 
@@ -38,6 +39,7 @@ export default function Sensibilidad() {
   const [selectedParam, setSelectedParam] = useState('ch');
   const [chartPoints, setChartPoints] = useState({ xs: [], ys: [] });
   const [insight, setInsight] = useState(null);
+  const [exporting, setExporting] = useState(false);
 
   const compute = useCallback((param) => {
     const meta = PARAMS_META[param];
@@ -61,38 +63,61 @@ export default function Sensibilidad() {
 
   useEffect(() => { compute(selectedParam); }, [selectedParam, compute]);
 
+  async function descargarPdf() {
+    setExporting(true);
+    try { await exportToPdf('sensibilidad-content', 'InduTech_Sensibilidad.pdf', 'Análisis de sensibilidad'); }
+    finally { setExporting(false); }
+  }
+
   const chartData = {
     labels: chartPoints.xs,
     datasets: [{ label: 'Costo óptimo', data: chartPoints.ys, borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true, backgroundColor: 'rgba(42,120,214,0.07)' }]
   };
-  const chartOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#e8e7e4' }, ticks: { font: { size: 10 }, maxTicksLimit: 8 }, title: { display: true, text: PARAMS_META[selectedParam].label, font: { size: 11 } } }, y: { grid: { color: '#e8e7e4' }, ticks: { font: { size: 10 }, callback: v => '$' + Math.round(v / 1000) + 'k' } } } };
+  const chartOpts = {
+    responsive: true, maintainAspectRatio: false, animation: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: '#e8e7e4' }, ticks: { font: { size: 10 }, maxTicksLimit: 8 }, title: { display: true, text: PARAMS_META[selectedParam].label, font: { size: 11 } } },
+      y: { grid: { color: '#e8e7e4' }, ticks: { font: { size: 10 }, callback: v => '$' + Math.round(v / 1000) + 'k' } }
+    }
+  };
 
   return (
     <>
-      <h2 style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Análisis de sensibilidad</h2>
-      <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>Variá un parámetro y observá cómo responde el costo total óptimo en todo su rango.</p>
-
-      <div className="panel" style={{ marginBottom: 14 }}>
-        <div className="panel-hd"><span className="panel-title"><i className="ti ti-adjustments" />Parámetro a analizar</span></div>
-        <select value={selectedParam} onChange={e => setSelectedParam(e.target.value)}>
-          {Object.entries(PARAMS_META).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-        </select>
-      </div>
-
-      <div className="panel" style={{ marginBottom: 14 }}>
-        <div className="panel-hd"><span className="panel-title"><i className="ti ti-chart-line" />Curva de sensibilidad</span></div>
-        <div style={{ height: 260 }}><Line data={chartData} options={chartOpts} /></div>
-      </div>
-
-      {insight && (
-        <div className={`alert ${insight.pct > 50 ? 'alert-danger' : insight.pct > 20 ? 'alert-warning' : 'alert-success'}`}>
-          <i className={`ti ti-${insight.pct > 50 ? 'alert-circle' : insight.pct > 20 ? 'alert-triangle' : 'check'}`} />
-          <span>
-            Al variar <strong>{insight.label}</strong> en su rango completo, el costo óptimo cambia hasta un <strong>{insight.pct}%</strong>.
-            {insight.pct > 30 ? ' Alta sensibilidad — este parámetro requiere monitoreo constante.' : ' El modelo es relativamente estable ante este parámetro.'}
-          </span>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div>
+          <h2 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Análisis de sensibilidad</h2>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>Variá un parámetro y observá cómo responde el costo total óptimo en todo su rango.</p>
         </div>
-      )}
+        <button className="btn" onClick={descargarPdf} disabled={exporting}>
+          {exporting ? <span className="spinner" /> : <i className="ti ti-file-type-pdf" />}
+          Descargar PDF
+        </button>
+      </div>
+
+      <div id="sensibilidad-content">
+        <div className="panel" style={{ marginBottom: 14 }}>
+          <div className="panel-hd"><span className="panel-title"><i className="ti ti-adjustments" />Parámetro a analizar</span></div>
+          <select value={selectedParam} onChange={e => setSelectedParam(e.target.value)}>
+            {Object.entries(PARAMS_META).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+          </select>
+        </div>
+
+        <div className="panel" style={{ marginBottom: 14 }}>
+          <div className="panel-hd"><span className="panel-title"><i className="ti ti-chart-line" />Curva de sensibilidad</span></div>
+          <div style={{ height: 260 }}><Line data={chartData} options={chartOpts} /></div>
+        </div>
+
+        {insight && (
+          <div className={`alert ${insight.pct > 50 ? 'alert-danger' : insight.pct > 20 ? 'alert-warning' : 'alert-success'}`}>
+            <i className={`ti ti-${insight.pct > 50 ? 'alert-circle' : insight.pct > 20 ? 'alert-triangle' : 'check'}`} />
+            <span>
+              Al variar <strong>{insight.label}</strong> en su rango completo, el costo óptimo cambia hasta un <strong>{insight.pct}%</strong>.
+              {insight.pct > 30 ? ' Alta sensibilidad — este parámetro requiere monitoreo constante.' : ' El modelo es relativamente estable ante este parámetro.'}
+            </span>
+          </div>
+        )}
+      </div>
     </>
   );
 }

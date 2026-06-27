@@ -28,6 +28,20 @@ export async function exportToPdf(elementId, filename = 'reporte.pdf', title = '
     useCORS: true,
     backgroundColor: '#ffffff',
     logging: false,
+    onclone: (clonedDoc) => {
+      const clonedEl = clonedDoc.getElementById(elementId);
+      if (clonedEl) {
+        clonedEl.style.animation = 'none';
+        clonedEl.style.transform = 'none';
+        clonedEl.style.opacity = '1';
+        const children = clonedEl.querySelectorAll('*');
+        for (let i = 0; i < children.length; i++) {
+          children[i].style.animation = 'none';
+          children[i].style.transform = 'none';
+          children[i].style.opacity = '1';
+        }
+      }
+    }
   });
 
   const imgData = canvas.toDataURL('image/png');
@@ -74,7 +88,14 @@ export async function exportToPdf(elementId, filename = 'reporte.pdf', title = '
     for (let i = 0; i < totalPages; i++) {
       if (i > 0) {
         pdf.addPage();
-        // Repetir header/footer en cada página
+        // 1. Dibujar la imagen primero
+        pdf.addImage(
+          imgData, 'PNG',
+          margin, startY - i * availH,
+          imgW, imgH,
+          '', 'FAST'
+        );
+        // 2. Dibujar header/footer encima para que no se tapen
         pdf.setFillColor(42, 120, 214);
         pdf.rect(0, 0, pageW, 18, 'F');
         pdf.setTextColor(255, 255, 255);
@@ -84,19 +105,23 @@ export async function exportToPdf(elementId, filename = 'reporte.pdf', title = '
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(9);
         pdf.text(`${title || filename} — pág. ${i + 1}`, pageW - margin, 12, { align: 'right' });
+        
         pdf.setFillColor(240, 238, 235);
         pdf.rect(0, footerY - 4, pageW, 12, 'F');
         pdf.setTextColor(137, 135, 129);
         pdf.setFontSize(8);
         pdf.text(`Generado el ${new Date().toLocaleString('es-AR')}`, margin, footerY + 1);
         pdf.text('InduTech Optimizer · UTN FRVM', pageW - margin, footerY + 1, { align: 'right' });
+      } else {
+        // En la primera página (i=0) ya se dibujó el header/footer antes, 
+        // y la imagen se dibuja debajo (en startY).
+        pdf.addImage(
+          imgData, 'PNG',
+          margin, startY - i * availH,
+          imgW, imgH,
+          '', 'FAST'
+        );
       }
-      pdf.addImage(
-        imgData, 'PNG',
-        margin, startY - i * availH,
-        imgW, imgH,
-        '', 'FAST'
-      );
     }
   }
 

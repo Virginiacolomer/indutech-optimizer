@@ -74,7 +74,8 @@ export default function Sensibilidad() {
     datasets: [{ label: 'Costo óptimo', data: chartPoints.ys, borderColor: '#ff6b00', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true, backgroundColor: 'rgba(255,107,0,0.08)' }]
   };
   const chartOpts = {
-    responsive: true, maintainAspectRatio: false, animation: false,
+    responsive: true, maintainAspectRatio: false, 
+    animation: { duration: 600, easing: 'easeOutQuart' },
     plugins: { legend: { display: false } },
     scales: {
       x: { grid: { color: '#e8e7e4' }, ticks: { font: { size: 10 }, maxTicksLimit: 8 }, title: { display: true, text: PARAMS_META[selectedParam].label, font: { size: 11 } } },

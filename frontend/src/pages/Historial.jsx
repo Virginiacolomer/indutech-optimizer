@@ -16,8 +16,8 @@ function SimCard({ row, onDelete }) {
   const chartData = {
     labels: ['Enero', 'Febrero', 'Marzo'],
     datasets: [
-      { label: 'Contratar', data: [+row.resultado_x1||0, +row.resultado_x2||0, +row.resultado_x3||0], backgroundColor: '#2a78d6', borderRadius: 3, maxBarThickness: 24 },
-      { label: 'Inventario', data: [+row.resultado_i1||0, +row.resultado_i2||0, +row.resultado_i3||0], backgroundColor: '#1baf7a', borderRadius: 3, maxBarThickness: 24 },
+      { label: 'Contratar', data: [+row.resultado_x1||0, +row.resultado_x2||0, +row.resultado_x3||0], backgroundColor: '#ff6b00', borderRadius: 3, maxBarThickness: 24 },
+      { label: 'Inventario', data: [+row.resultado_i1||0, +row.resultado_i2||0, +row.resultado_i3||0], backgroundColor: '#111115', borderRadius: 3, maxBarThickness: 24 },
     ]
   };
   const chartOpts = {
@@ -69,8 +69,8 @@ function SimCard({ row, onDelete }) {
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>Plan de contratación óptimo</div>
           <div style={{ height: 140 }}><Bar data={chartData} options={chartOpts} /></div>
           <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text-secondary)' }}><span style={{ width: 8, height: 8, borderRadius: 2, background: '#2a78d6', display: 'inline-block' }} />Contratar</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text-secondary)' }}><span style={{ width: 8, height: 8, borderRadius: 2, background: '#1baf7a', display: 'inline-block' }} />Inventario</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text-secondary)' }}><span style={{ width: 8, height: 8, borderRadius: 2, background: '#ff6b00', display: 'inline-block' }} />Contratar</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text-secondary)' }}><span style={{ width: 8, height: 8, borderRadius: 2, background: '#111115', display: 'inline-block' }} />Inventario</span>
           </div>
         </div>
       </div>

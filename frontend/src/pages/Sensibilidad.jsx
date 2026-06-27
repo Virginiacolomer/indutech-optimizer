@@ -71,7 +71,7 @@ export default function Sensibilidad() {
 
   const chartData = {
     labels: chartPoints.xs,
-    datasets: [{ label: 'Costo óptimo', data: chartPoints.ys, borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true, backgroundColor: 'rgba(42,120,214,0.07)' }]
+    datasets: [{ label: 'Costo óptimo', data: chartPoints.ys, borderColor: '#ff6b00', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true, backgroundColor: 'rgba(255,107,0,0.08)' }]
   };
   const chartOpts = {
     responsive: true, maintainAspectRatio: false, animation: false,

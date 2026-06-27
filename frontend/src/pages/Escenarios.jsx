@@ -7,7 +7,7 @@ import { exportToPdf } from '../components/pdfExport.js';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 const DEFAULTS = { d1: 80, d2: 60, d3: 40, inv0: 50, ch: 50, cm: 20, cap: 100 };
-const COLORS = { base: '#2a78d6', prod: '#eda100', out: '#1baf7a', outfix: '#e34948', demand: '#4a3aa7' };
+const COLORS = { base: '#ff6b00', prod: '#3f3f46', out: '#111115', outfix: '#71717a', demand: '#a1a1aa' };
 const LABELS = { base: 'Base', prod: 'Prod. −20%', out: 'Outsourcing', outfix: 'Outsrc. +$10k', demand: 'Demanda +20%' };
 const DESCS  = { base: 'Plan estándar sin alteraciones.', prod: 'Caída de productividad del 20%.', out: 'Tercerización a $8/hs sin costo fijo.', outfix: 'Tercerización a $8/hs + $10.000 de activación.', demand: 'Pico de demanda con aumento del 20%.' };
 

@@ -34,7 +34,7 @@ export default function MonteCarlo() {
   const hist = resultado?.histograma;
   const chartData = hist ? {
     labels: hist.labels.map(v => '$' + Math.round(v / 1000) + 'k'),
-    datasets: [{ data: hist.values, backgroundColor: 'rgba(42,120,214,0.65)', borderColor: '#2a78d6', borderWidth: 1, borderRadius: 3 }]
+    datasets: [{ data: hist.values, backgroundColor: 'rgba(255,107,0,0.7)', borderColor: '#ff6b00', borderWidth: 1, borderRadius: 3 }]
   } : null;
   const chartOpts = {
     responsive: true, maintainAspectRatio: false, animation: false,

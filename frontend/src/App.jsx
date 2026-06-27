@@ -6,11 +6,11 @@ import MonteCarlo from './pages/MonteCarlo.jsx';
 import Historial from './pages/Historial.jsx';
 
 const NAV = [
-  { path: '/',            label: 'Dashboard',    icon: 'ti-layout-dashboard', section: 'Principal' },
-  { path: '/escenarios',  label: 'Escenarios',   icon: 'ti-chart-bar',        section: 'Principal', badge: '5' },
-  { path: '/sensibilidad',label: 'Sensibilidad', icon: 'ti-adjustments',      section: 'Análisis' },
-  { path: '/montecarlo',  label: 'Monte Carlo',  icon: 'ti-dice',             section: 'Análisis' },
-  { path: '/historial',   label: 'Historial',    icon: 'ti-history',          section: 'Sistema' },
+  { path: '/', label: 'Dashboard', icon: 'ti-layout-dashboard', section: 'Principal' },
+  { path: '/escenarios', label: 'Escenarios', icon: 'ti-chart-bar', section: 'Principal' },
+  { path: '/sensibilidad', label: 'Sensibilidad', icon: 'ti-adjustments', section: 'Análisis' },
+  { path: '/montecarlo', label: 'Monte Carlo', icon: 'ti-dice', section: 'Análisis' },
+  { path: '/historial', label: 'Historial', icon: 'ti-history', section: 'Sistema' },
 ];
 
 export default function App() {
@@ -67,19 +67,15 @@ export default function App() {
         <div className="topbar">
           <div className="topbar-title">Planificación de capacidad IT</div>
           <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>1er trimestre · InduTech S.A.</span>
-          <div className="status-pill">
-            <div className="status-dot" />
-            Modelo activo
-          </div>
         </div>
 
         <div className="content">
           <Routes>
-            <Route path="/"             element={<Dashboard />} />
-            <Route path="/escenarios"   element={<Escenarios />} />
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/escenarios" element={<Escenarios />} />
             <Route path="/sensibilidad" element={<Sensibilidad />} />
-            <Route path="/montecarlo"   element={<MonteCarlo />} />
-            <Route path="/historial"    element={<Historial />} />
+            <Route path="/montecarlo" element={<MonteCarlo />} />
+            <Route path="/historial" element={<Historial />} />
           </Routes>
         </div>
       </div>

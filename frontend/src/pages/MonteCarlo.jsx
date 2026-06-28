@@ -7,7 +7,7 @@ import { exportToPdf } from '../components/pdfExport.js';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
 const BASE = { d1: 80, d2: 60, d3: 40, inv0: 50, ch: 50, cm: 20, cap: 100 };
-function fmt(n) { return n == null ? '—' : '$' + Math.round(n).toLocaleString('es-AR'); }
+function fmt(n) { return n == null ? '—' : '$ ' + Math.round(n).toLocaleString('es-AR'); }
 
 export default function MonteCarlo() {
   const [variabilidad, setVariabilidad] = useState(20);
@@ -33,8 +33,8 @@ export default function MonteCarlo() {
 
   const hist = resultado?.histograma;
   const chartData = hist ? {
-    labels: hist.labels.map(v => '$' + Math.round(v / 1000) + 'k'),
-    datasets: [{ data: hist.values, backgroundColor: 'rgba(255,107,0,0.7)', borderColor: '#ff6b00', borderWidth: 1, borderRadius: 3 }]
+    labels: hist.labels.map(v => '$ ' + Math.round(v).toLocaleString('es-AR')),
+    datasets: [{ data: hist.values, backgroundColor: 'rgba(42,120,214,0.65)', borderColor: '#2a78d6', borderWidth: 1, borderRadius: 3 }]
   } : null;
   const chartOpts = {
     responsive: true, maintainAspectRatio: false, animation: false,

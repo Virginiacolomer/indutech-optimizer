@@ -6,10 +6,9 @@ const { pool } = require('../db');
 router.get('/', async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT id, nombre, demanda_enero, demanda_febrero, demanda_marzo,
+      `SELECT id, nombre, num_periodos, demandas,
               inventario_inicial, costo_contratar, costo_mantener, capacidad_maxima,
-              resultado_costo, resultado_x1, resultado_x2, resultado_x3,
-              resultado_i1, resultado_i2, resultado_i3,
+              resultado_costo, resultado_produccion, resultado_inventario,
               creado_en
        FROM simulaciones
        ORDER BY creado_en DESC

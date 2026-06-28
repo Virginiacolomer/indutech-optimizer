@@ -5,14 +5,17 @@ const { solveLP, calcularEscenarios } = require('../solver');
 
 // POST /api/optimizer/solve — resuelve y guarda en DB
 router.post('/solve', async (req, res) => {
-  const { nombre, d1, d2, d3, inv0, ch, cm, cap } = req.body;
+  const { nombre, demands, inv0, ch, cm, cap } = req.body;
 
-  if ([d1, d2, d3, inv0, ch, cm, cap].some(v => v === undefined || v === null)) {
-    return res.status(400).json({ error: 'Faltan parámetros requeridos.' });
+  if (!demands || !Array.isArray(demands) || demands.length < 1 || demands.length > 12) {
+    return res.status(400).json({ error: 'Se requiere un array "demands" con 1 a 12 períodos.' });
+  }
+  if ([inv0, ch, cm, cap].some(v => v === undefined || v === null)) {
+    return res.status(400).json({ error: 'Faltan parámetros requeridos (inv0, ch, cm, cap).' });
   }
 
   const params = {
-    d1: Number(d1), d2: Number(d2), d3: Number(d3),
+    demands: demands.map(Number),
     inv0: Number(inv0), ch: Number(ch), cm: Number(cm), cap: Number(cap)
   };
 
@@ -25,19 +28,19 @@ router.post('/solve', async (req, res) => {
   try {
     const { rows } = await pool.query(
       `INSERT INTO simulaciones
-        (nombre, demanda_enero, demanda_febrero, demanda_marzo, inventario_inicial,
+        (nombre, num_periodos, demandas, inventario_inicial,
          costo_contratar, costo_mantener, capacidad_maxima,
-         resultado_costo, resultado_x1, resultado_x2, resultado_x3,
-         resultado_i1, resultado_i2, resultado_i3)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+         resultado_costo, resultado_produccion, resultado_inventario)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
        RETURNING id`,
       [
         nombre || 'Sin nombre',
-        params.d1, params.d2, params.d3, params.inv0,
-        params.ch, params.cm, params.cap,
+        params.demands.length,
+        JSON.stringify(params.demands),
+        params.inv0, params.ch, params.cm, params.cap,
         resultado.cost,
-        resultado.x1, resultado.x2, resultado.x3,
-        resultado.i1, resultado.i2, resultado.i3
+        JSON.stringify(resultado.production),
+        JSON.stringify(resultado.inventory)
       ]
     );
 
@@ -50,10 +53,20 @@ router.post('/solve', async (req, res) => {
 
 // GET /api/optimizer/escenarios — calcula todos los escenarios sin guardar
 router.get('/escenarios', (req, res) => {
+  let demands;
+  if (req.query.demands) {
+    try { demands = JSON.parse(req.query.demands); } catch { demands = [80, 60, 40]; }
+  } else {
+    // Backward compat: accept d1, d2, d3
+    demands = [
+      Number(req.query.d1) || 80,
+      Number(req.query.d2) || 60,
+      Number(req.query.d3) || 40,
+    ];
+  }
+
   const params = {
-    d1: Number(req.query.d1) || 80,
-    d2: Number(req.query.d2) || 60,
-    d3: Number(req.query.d3) || 40,
+    demands,
     inv0: Number(req.query.inv0) || 50,
     ch: Number(req.query.ch) || 50,
     cm: Number(req.query.cm) || 20,

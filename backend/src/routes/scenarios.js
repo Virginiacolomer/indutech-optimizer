@@ -5,10 +5,18 @@ const { runMonteCarlo } = require('../solver');
 
 // POST /api/scenarios/montecarlo — corre simulación y guarda resultado
 router.post('/montecarlo', async (req, res) => {
-  const { simulacion_id, d1, d2, d3, inv0, ch, cm, cap, variabilidad = 0.2, n_simulaciones = 2000 } = req.body;
+  const { simulacion_id, demands, inv0, ch, cm, cap, variabilidad = 0.2, n_simulaciones = 2000 } = req.body;
+
+  // Backward compat: accept d1, d2, d3
+  let demandsArr;
+  if (demands && Array.isArray(demands)) {
+    demandsArr = demands.map(Number);
+  } else {
+    demandsArr = [Number(req.body.d1) || 80, Number(req.body.d2) || 60, Number(req.body.d3) || 40];
+  }
 
   const params = {
-    d1: Number(d1), d2: Number(d2), d3: Number(d3),
+    demands: demandsArr,
     inv0: Number(inv0), ch: Number(ch), cm: Number(cm), cap: Number(cap),
     variabilidad: Number(variabilidad),
     nSimulaciones: Number(n_simulaciones)

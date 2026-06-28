@@ -6,7 +6,14 @@ import { exportToPdf } from '../components/pdfExport.js';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
+<<<<<<< HEAD
 const DEFAULTS = { d1: 80, d2: 60, d3: 40, inv0: 50, ch: 50, cm: 20, cap: 100 };
+=======
+const DEFAULT_DEMANDS = [80, 60, 40];
+const COLORS = { base: '#ff6b00', prod: '#3f3f46', out: '#111115', outfix: '#71717a', demand: '#a1a1aa' };
+const LABELS = { base: 'Base', prod: 'Prod. −20%', out: 'Outsourcing', outfix: 'Outsrc. +$10k', demand: 'Demanda +20%' };
+const DESCS  = { base: 'Plan estándar sin alteraciones.', prod: 'Caída de productividad del 20%.', out: 'Tercerización a $8/hs sin costo fijo.', outfix: 'Tercerización a $8/hs + $10.000 de activación.', demand: 'Pico de demanda con aumento del 20%.' };
+>>>>>>> 68fa069 (mas meses añadidos)
 
 // Solver local idéntico al del Dashboard
 function solveLocal({ d1, d2, d3, inv0, ch, cm, cap }) {
@@ -34,12 +41,24 @@ function fmt(n) {
 }
 
 export default function Escenarios() {
+<<<<<<< HEAD
   const [params] = useState(DEFAULTS);
   // Variación de demanda configurable: -50% a +100%
   const [variacion, setVariacion] = useState(20);
   const [exporting, setExporting] = useState(false);
 
   const setVariacionParam = useCallback((_id, v) => setVariacion(v), []);
+=======
+  const [active, setActive] = useState({ base: true, prod: false, out: false, outfix: false, demand: false });
+  const [costs, setCosts] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
+
+  useEffect(() => {
+    const params = { demands: JSON.stringify(DEFAULT_DEMANDS), inv0: 50, ch: 50, cm: 20, cap: 100 };
+    api.escenarios(params).then(data => { setCosts(data); setLoading(false); }).catch(() => setLoading(false));
+  }, []);
+>>>>>>> 68fa069 (mas meses añadidos)
 
   // Costo base con demanda original
   const baseResult = solveLocal(params);

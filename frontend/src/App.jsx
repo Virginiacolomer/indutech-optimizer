@@ -66,7 +66,7 @@ export default function App() {
       <div className="main">
         <div className="topbar">
           <div className="topbar-title">Planificación de capacidad IT</div>
-          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>1er trimestre · InduTech S.A.</span>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Planificación 1–12 meses · InduTech S.A.</span>
         </div>
 
         <div className="content">

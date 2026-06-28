@@ -8,24 +8,35 @@ const pool = new Pool({
 async function initDB() {
   const client = await pool.connect();
   try {
+    // Check if we need to migrate from old fixed-column schema
+    const { rows } = await client.query(`
+      SELECT column_name FROM information_schema.columns
+      WHERE table_name = 'simulaciones' AND column_name = 'demanda_enero'
+    `);
+
+    if (rows.length > 0) {
+      // Old schema detected — drop and recreate
+      console.log('Migrando base de datos al nuevo esquema flexible...');
+      await client.query(`
+        DROP TABLE IF EXISTS resultados_montecarlo CASCADE;
+        DROP TABLE IF EXISTS escenarios_guardados CASCADE;
+        DROP TABLE IF EXISTS simulaciones CASCADE;
+      `);
+    }
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS simulaciones (
         id SERIAL PRIMARY KEY,
         nombre VARCHAR(100),
-        demanda_enero INTEGER NOT NULL,
-        demanda_febrero INTEGER NOT NULL,
-        demanda_marzo INTEGER NOT NULL,
+        num_periodos INTEGER NOT NULL DEFAULT 3,
+        demandas JSONB NOT NULL,
         inventario_inicial INTEGER NOT NULL,
         costo_contratar NUMERIC NOT NULL,
         costo_mantener NUMERIC NOT NULL,
         capacidad_maxima INTEGER NOT NULL,
         resultado_costo NUMERIC,
-        resultado_x1 NUMERIC,
-        resultado_x2 NUMERIC,
-        resultado_x3 NUMERIC,
-        resultado_i1 NUMERIC,
-        resultado_i2 NUMERIC,
-        resultado_i3 NUMERIC,
+        resultado_produccion JSONB,
+        resultado_inventario JSONB,
         creado_en TIMESTAMP DEFAULT NOW()
       );
 

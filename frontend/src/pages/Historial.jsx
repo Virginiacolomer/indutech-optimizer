@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip } from 'chart.js';
 import { api } from '../api.js';
@@ -6,18 +6,38 @@ import { exportToPdf } from '../components/pdfExport.js';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
+<<<<<<< HEAD
 function fmt(n) { return n == null ? '—' : '$ ' + Math.round(n).toLocaleString('es-AR'); }
+=======
+const MONTH_NAMES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
+function fmt(n) { return n == null ? '—' : '$' + Math.round(n).toLocaleString('es-AR'); }
+>>>>>>> 68fa069 (mas meses añadidos)
 function fmtDate(d) { return new Date(d).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' }); }
 
 function SimCard({ row, onDelete }) {
   const [exporting, setExporting] = useState(false);
   const cardId = `sim-card-${row.id}`;
 
+  const demandas = row.demandas || [];
+  const produccion = row.resultado_produccion || [];
+  const inventario = row.resultado_inventario || [];
+  const numPeriods = row.num_periodos || demandas.length;
+  const labels = demandas.map((_, i) => MONTH_NAMES[i] || `Mes ${i + 1}`);
+
   const chartData = {
-    labels: ['Enero', 'Febrero', 'Marzo'],
+    labels,
     datasets: [
+<<<<<<< HEAD
       { label: 'Contratar', data: [+row.resultado_x1||0, +row.resultado_x2||0, +row.resultado_x3||0], backgroundColor: '#2a78d6', borderRadius: 3, maxBarThickness: 24 },
       { label: 'Inventario', data: [+row.resultado_i1||0, +row.resultado_i2||0, +row.resultado_i3||0], backgroundColor: '#1baf7a', borderRadius: 3, maxBarThickness: 24 },
+=======
+      { label: 'Contratar', data: produccion.map(v => +v || 0), backgroundColor: '#ff6b00', borderRadius: 3, maxBarThickness: 24 },
+      { label: 'Inventario', data: inventario.map(v => +v || 0), backgroundColor: '#111115', borderRadius: 3, maxBarThickness: 24 },
+>>>>>>> 68fa069 (mas meses añadidos)
     ]
   };
   const chartOpts = {
@@ -39,6 +59,7 @@ function SimCard({ row, onDelete }) {
           <span style={{ background: 'var(--blue-light)', color: 'var(--blue)', borderRadius: 4, padding: '1px 7px', fontSize: 11, fontWeight: 600, marginRight: 6 }}>#{row.id}</span>
           {row.nombre}
           <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400, marginLeft: 8 }}>{fmtDate(row.creado_en)}</span>
+          <span style={{ fontSize: 10, color: 'var(--blue)', fontWeight: 600, marginLeft: 8, background: 'var(--blue-light)', padding: '1px 6px', borderRadius: 4 }}>{numPeriods} {numPeriods === 1 ? 'mes' : 'meses'}</span>
         </span>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn" onClick={descargarPdf} disabled={exporting} style={{ padding: '4px 10px', fontSize: 12 }}>
@@ -54,7 +75,10 @@ function SimCard({ row, onDelete }) {
       <div className="grid-2" style={{ marginBottom: 0 }}>
         <div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>Parámetros utilizados</div>
-          <div className="result-row"><span className="result-key">Demanda (E/F/M)</span><span className="result-val">{row.demanda_enero} / {row.demanda_febrero} / {row.demanda_marzo} hs</span></div>
+          <div className="result-row">
+            <span className="result-key">Demandas</span>
+            <span className="result-val">{demandas.map((d, i) => `${MONTH_NAMES[i]?.slice(0, 3) || `M${i+1}`}: ${d}`).join(' / ')} hs</span>
+          </div>
           <div className="result-row"><span className="result-key">Inventario inicial</span><span className="result-val">{row.inventario_inicial} hs</span></div>
           <div className="result-row"><span className="result-key">Costo contratar</span><span className="result-val">${row.costo_contratar}/hs</span></div>
           <div className="result-row"><span className="result-key">Costo mantener</span><span className="result-val">${row.costo_mantener}/hs/mes</span></div>

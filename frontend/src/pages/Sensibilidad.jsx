@@ -5,34 +5,44 @@ import { exportToPdf } from '../components/pdfExport.js';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
 
+const MONTH_NAMES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
 const PARAMS_META = {
   ch:   { label: 'Costo contratar ($/hs)',     min: 10, max: 150 },
   cm:   { label: 'Costo mantener ($/hs/mes)',  min: 1,  max: 80 },
   inv0: { label: 'Inventario inicial (hs)',     min: 0,  max: 100 },
   cap:  { label: 'Capacidad máxima (hs/mes)',  min: 50, max: 200 },
-  d1:   { label: 'Demanda enero (hs)',          min: 20, max: 150 },
-  d2:   { label: 'Demanda febrero (hs)',        min: 20, max: 150 },
-  d3:   { label: 'Demanda marzo (hs)',          min: 20, max: 150 },
 };
 
-const BASE = { d1: 80, d2: 60, d3: 40, inv0: 50, ch: 50, cm: 20, cap: 100 };
+const BASE_DEMANDS = [80, 60, 40];
+const BASE = { demands: BASE_DEMANDS, inv0: 50, ch: 50, cm: 20, cap: 100 };
 
-function solveLocal({ d1, d2, d3, inv0, ch, cm, cap }) {
-  let best = Infinity;
-  const maxX = Math.ceil(Math.max(d1, d2, d3) * 2);
-  const step = Math.max(1, Math.floor(maxX / 80));
-  for (let x1 = 0; x1 <= Math.min(maxX, cap); x1 += step) {
-    const i1 = inv0 + x1 - d1; if (i1 < 0 || i1 > cap) continue;
-    for (let x2 = 0; x2 <= Math.min(maxX, cap); x2 += step) {
-      const i2 = i1 + x2 - d2; if (i2 < 0 || i2 > cap) continue;
-      for (let x3 = 0; x3 <= Math.min(maxX, cap); x3 += step) {
-        const i3 = i2 + x3 - d3; if (i3 < 0 || i3 > cap) continue;
-        const cost = ch * (x1 + x2 + x3) + cm * (i1 + i2 + i3);
-        if (cost < best) best = cost;
-      }
-    }
+/**
+ * Local solver for sensitivity analysis.
+ * Uses greedy approach for fast feedback.
+ */
+function solveLocal({ demands, inv0, ch, cm, cap }) {
+  const n = demands.length;
+  const production = [];
+  const inventory = [];
+  let prevInv = inv0;
+
+  for (let t = 0; t < n; t++) {
+    const needed = demands[t] - prevInv;
+    let x = Math.max(0, needed);
+    x = Math.min(x, cap);
+    const inv = prevInv + x - demands[t];
+    if (inv < 0) return null;
+    production.push(x);
+    inventory.push(inv);
+    prevInv = inv;
   }
-  return best === Infinity ? null : best;
+
+  const cost = production.reduce((s, x) => s + ch * x, 0) + inventory.reduce((s, i) => s + cm * i, 0);
+  return cost;
 }
 
 export default function Sensibilidad() {
@@ -41,20 +51,35 @@ export default function Sensibilidad() {
   const [insight, setInsight] = useState(null);
   const [exporting, setExporting] = useState(false);
 
+  // Add per-demand sensitivity options dynamically
+  const allParams = { ...PARAMS_META };
+  BASE_DEMANDS.forEach((_, i) => {
+    allParams[`demand_${i}`] = { label: `Demanda ${MONTH_NAMES[i]} (hs)`, min: 20, max: 150 };
+  });
+
   const compute = useCallback((param) => {
-    const meta = PARAMS_META[param];
+    const meta = allParams[param];
+    if (!meta) return;
     const pts = 40;
     const step = (meta.max - meta.min) / pts;
     const xs = [], ys = [];
     for (let i = 0; i <= pts; i++) {
       const v = meta.min + i * step;
-      const pp = { ...BASE, [param]: v };
+      let pp;
+      if (param.startsWith('demand_')) {
+        const idx = parseInt(param.split('_')[1]);
+        const newDemands = [...BASE_DEMANDS];
+        newDemands[idx] = v;
+        pp = { ...BASE, demands: newDemands };
+      } else {
+        pp = { ...BASE, [param]: v };
+      }
       const cost = solveLocal(pp);
       xs.push(Math.round(v));
       ys.push(cost !== null ? Math.round(cost) : null);
     }
     const valid = ys.filter(v => v !== null);
-    const range = Math.max(...valid) - Math.min(...valid);
+    const range = valid.length > 0 ? Math.max(...valid) - Math.min(...valid) : 0;
     const baseC = solveLocal(BASE) || 1;
     const pct = Math.round(range / baseC * 100);
     setChartPoints({ xs, ys });
@@ -69,6 +94,8 @@ export default function Sensibilidad() {
     finally { setExporting(false); }
   }
 
+  const currentMeta = allParams[selectedParam] || { label: selectedParam };
+
   const chartData = {
     labels: chartPoints.xs,
     datasets: [{ label: 'Costo óptimo', data: chartPoints.ys, borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true, backgroundColor: 'rgba(42,120,214,0.07)' }]
@@ -77,8 +104,13 @@ export default function Sensibilidad() {
     responsive: true, maintainAspectRatio: false, animation: false,
     plugins: { legend: { display: false } },
     scales: {
+<<<<<<< HEAD
       x: { grid: { color: '#e8e7e4' }, ticks: { font: { size: 10 }, maxTicksLimit: 8 }, title: { display: true, text: PARAMS_META[selectedParam].label, font: { size: 11 } } },
       y: { grid: { color: '#e8e7e4' }, ticks: { font: { size: 10 }, callback: v => '$ ' + Math.round(v).toLocaleString('es-AR') } }
+=======
+      x: { grid: { color: '#e8e7e4' }, ticks: { font: { size: 10 }, maxTicksLimit: 8 }, title: { display: true, text: currentMeta.label, font: { size: 11 } } },
+      y: { grid: { color: '#e8e7e4' }, ticks: { font: { size: 10 }, callback: v => '$' + Math.round(v / 1000) + 'k' } }
+>>>>>>> 68fa069 (mas meses añadidos)
     }
   };
 
@@ -99,7 +131,7 @@ export default function Sensibilidad() {
         <div className="panel" style={{ marginBottom: 14 }}>
           <div className="panel-hd"><span className="panel-title"><i className="ti ti-adjustments" />Parámetro a analizar</span></div>
           <select value={selectedParam} onChange={e => setSelectedParam(e.target.value)}>
-            {Object.entries(PARAMS_META).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+            {Object.entries(allParams).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
           </select>
         </div>
 

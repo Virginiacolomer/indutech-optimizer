@@ -3,10 +3,11 @@ import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip } from 'chart.js';
 import { api } from '../api.js';
 import { exportToPdf } from '../components/pdfExport.js';
+import { useParamsContext } from '../context/ParamsContext.jsx';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
-import { useParamsContext } from '../context/ParamsContext.jsx';
+
 function fmt(n) { return n == null ? '—' : '$ ' + Math.round(n).toLocaleString('es-AR'); }
 
 export default function MonteCarlo() {

@@ -4,6 +4,7 @@ import Escenarios from './pages/Escenarios.jsx';
 import Sensibilidad from './pages/Sensibilidad.jsx';
 import MonteCarlo from './pages/MonteCarlo.jsx';
 import Historial from './pages/Historial.jsx';
+import { ParamsProvider } from './context/ParamsContext.jsx';
 
 const NAV = [
   { path: '/', label: 'Dashboard', icon: 'ti-layout-dashboard', section: 'Principal' },
@@ -19,8 +20,9 @@ export default function App() {
   let lastSection = '';
 
   return (
-    <div className="app">
-      <aside className="sidebar">
+    <ParamsProvider>
+      <div className="app">
+        <aside className="sidebar">
         <div className="logo-area">
           <div className="logo-mark">
             <div className="logo-icon"><i className="ti ti-cpu" /></div>
@@ -80,5 +82,6 @@ export default function App() {
         </div>
       </div>
     </div>
+    </ParamsProvider>
   );
 }

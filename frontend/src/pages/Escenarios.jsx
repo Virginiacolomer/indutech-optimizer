@@ -3,28 +3,50 @@ import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip } from 'chart.js';
 import SliderInput from '../components/SliderInput.jsx';
 import { exportToPdf } from '../components/pdfExport.js';
+import { useParamsContext, getMonthName } from '../context/ParamsContext.jsx';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
-const DEFAULTS = { d1: 80, d2: 60, d3: 40, inv0: 50, ch: 50, cm: 20, cap: 100 };
+// Solver local idéntico al del Dashboard adaptado para múltiples meses
+function solveLocal({ demands, inv0, ch, cm, cap }) {
+  const n = demands.length;
+  const numCap = Number(cap);
+  const numInv0 = Number(inv0);
+  const numCh = Number(ch);
+  const numCm = Number(cm);
 
-// Solver local idéntico al del Dashboard
-function solveLocal({ d1, d2, d3, inv0, ch, cm, cap }) {
-  let best = Infinity, r = {};
-  const maxX = Math.ceil(Math.max(d1, d2, d3) * 2);
-  const step = Math.max(1, Math.floor(maxX / 100));
-  for (let x1 = 0; x1 <= Math.min(maxX, cap); x1 += step) {
-    const i1 = inv0 + x1 - d1; if (i1 < 0 || i1 > cap) continue;
-    for (let x2 = 0; x2 <= Math.min(maxX, cap); x2 += step) {
-      const i2 = i1 + x2 - d2; if (i2 < 0 || i2 > cap) continue;
-      for (let x3 = 0; x3 <= Math.min(maxX, cap); x3 += step) {
-        const i3 = i2 + x3 - d3; if (i3 < 0 || i3 > cap) continue;
-        const cost = ch * (x1 + x2 + x3) + cm * (i1 + i2 + i3);
-        if (cost < best) { best = cost; r = { cost, x1, x2, x3, i1, i2, i3 }; }
-      }
-    }
+  const minInv = new Array(n).fill(0);
+  let req = 0;
+  for (let t = n - 1; t >= 0; t--) {
+    const d = Number(demands[t]);
+    req = Math.max(0, d + req - numCap);
+    minInv[t] = req;
   }
-  return best === Infinity ? null : r;
+
+  if (numInv0 < minInv[0]) return null;
+
+  const production = [];
+  const inventory = [];
+  let prev = numInv0;
+
+  for (let t = 0; t < n; t++) {
+    const d = Number(demands[t]);
+    const nextReq = t < n - 1 ? minInv[t + 1] : 0;
+    const needed = d + nextReq - prev;
+
+    let x = Math.max(0, needed);
+    x = Math.min(x, numCap);
+    const inv = prev + x - d;
+
+    if (inv < 0 || inv > numCap) return null;
+
+    production.push(x);
+    inventory.push(inv);
+    prev = inv;
+  }
+
+  const cost = production.reduce((s, x) => s + numCh * x, 0) + inventory.reduce((s, i) => s + numCm * i, 0);
+  return { cost, production, inventory };
 }
 
 // Formato pesos argentinos
@@ -34,8 +56,7 @@ function fmt(n) {
 }
 
 export default function Escenarios() {
-  const [params] = useState(DEFAULTS);
-  // Variación de demanda configurable: -50% a +100%
+  const { params } = useParamsContext();
   const [variacion, setVariacion] = useState(20);
   const [exporting, setExporting] = useState(false);
 
@@ -49,9 +70,7 @@ export default function Escenarios() {
   const factor = 1 + variacion / 100;
   const paramsVar = {
     ...params,
-    d1: Math.max(1, Math.round(params.d1 * factor)),
-    d2: Math.max(1, Math.round(params.d2 * factor)),
-    d3: Math.max(1, Math.round(params.d3 * factor)),
+    demands: params.demands.map(d => Math.max(1, Math.round(d * factor)))
   };
   const varResult = solveLocal(paramsVar);
   const costVar = varResult ? varResult.cost : Infinity;
@@ -59,8 +78,9 @@ export default function Escenarios() {
   const diff = costVar !== Infinity && costBase !== Infinity ? costVar - costBase : null;
   const diffPct = diff !== null && costBase > 0 ? Math.round(diff / costBase * 100) : null;
 
-  const isAlza = variacion > 0;
   const infact = costVar === Infinity;
+  const totalBase = params.demands.reduce((a, b) => a + b, 0);
+  const totalVar = paramsVar.demands.reduce((a, b) => a + b, 0);
 
   // Datos del gráfico: base vs escenario
   const chartData = {
@@ -82,10 +102,7 @@ export default function Escenarios() {
       x: { grid: { display: false }, ticks: { font: { size: 12 } } },
       y: {
         grid: { color: '#e8e7e4' },
-        ticks: {
-          font: { size: 10 },
-          callback: v => '$ ' + Math.round(v).toLocaleString('es-AR'),
-        }
+        ticks: { font: { size: 10 }, callback: v => '$ ' + Math.round(v).toLocaleString('es-AR') }
       }
     }
   };
@@ -113,6 +130,7 @@ export default function Escenarios() {
 
       <div id="escenarios-content">
 
+
         {/* Slider de variación */}
         <div className="panel" style={{ marginBottom: 16 }}>
           <div className="panel-hd">
@@ -122,7 +140,7 @@ export default function Escenarios() {
           <SliderInput
             label="Variación respecto a la demanda base (%)"
             id="variacion"
-            min={-50}
+            min={-100}
             max={100}
             step={1}
             value={variacion}
@@ -153,23 +171,23 @@ export default function Escenarios() {
         {/* Demanda resultante */}
         <div className="panel" style={{ marginBottom: 16 }}>
           <div className="panel-hd"><span className="panel-title"><i className="ti ti-calendar" />Demanda resultante por mes</span></div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-            {[
-              { mes: 'Enero', base: params.d1, nueva: paramsVar.d1 },
-              { mes: 'Febrero', base: params.d2, nueva: paramsVar.d2 },
-              { mes: 'Marzo', base: params.d3, nueva: paramsVar.d3 },
-            ].map(({ mes, base, nueva }) => (
-              <div key={mes} style={{ background: 'var(--surface-0)', borderRadius: 'var(--radius)', padding: '10px 14px' }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>{mes}</div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                  <span style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-primary)' }}>{nueva} hs</span>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)', textDecoration: 'line-through' }}>{base} hs</span>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10 }}>
+            {params.demands.map((base, i) => {
+              const nueva = paramsVar.demands[i];
+              const mes = getMonthName(params.startMonth, i);
+              return (
+                <div key={i} style={{ background: 'var(--surface-0)', borderRadius: 'var(--radius)', padding: '10px 14px' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>{mes}</div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                    <span style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-primary)' }}>{nueva} hs</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)', textDecoration: 'line-through' }}>{base} hs</span>
+                  </div>
+                  <div style={{ fontSize: 11, marginTop: 3, color: nueva > base ? 'var(--red)' : nueva < base ? 'var(--green)' : 'var(--text-muted)' }}>
+                    {nueva > base ? `+${nueva - base} hs` : nueva < base ? `−${base - nueva} hs` : 'Sin cambio'}
+                  </div>
                 </div>
-                <div style={{ fontSize: 11, marginTop: 3, color: nueva > base ? 'var(--red)' : nueva < base ? 'var(--green)' : 'var(--text-muted)' }}>
-                  {nueva > base ? `+${nueva - base} hs` : nueva < base ? `−${base - nueva} hs` : 'Sin cambio'}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -193,16 +211,14 @@ export default function Escenarios() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {/* KPI base */}
             <div className="panel">
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Costo óptimo — Plan base</div>
               <div style={{ fontSize: 24, fontWeight: 600, color: 'var(--blue)' }}>{fmt(costBase)}</div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                Demanda: {params.d1 + params.d2 + params.d3} hs totales
+                Demanda: {totalBase} hs totales
               </div>
             </div>
 
-            {/* KPI escenario */}
             <div className="panel">
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
                 Costo óptimo — Demanda {variacion > 0 ? '+' : ''}{variacion}%
@@ -211,11 +227,10 @@ export default function Escenarios() {
                 {fmt(costVar)}
               </div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                Demanda: {paramsVar.d1 + paramsVar.d2 + paramsVar.d3} hs totales
+                Demanda: {totalVar} hs totales
               </div>
             </div>
 
-            {/* Diferencia */}
             {!infact && diff !== null && (
               <div className="panel">
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Impacto vs. plan base</div>
@@ -234,26 +249,25 @@ export default function Escenarios() {
         {!infact && varResult && (
           <div className="panel" style={{ marginTop: 16 }}>
             <div className="panel-hd"><span className="panel-title"><i className="ti ti-list-check" />Plan óptimo bajo este escenario</span></div>
-            <div className="result-row">
-              <span className="result-key">Enero — contratar</span>
-              <span className="result-val">{Math.round(varResult.x1)} hs <span className="tag tag-blue">inv: {Math.round(varResult.i1)} hs</span></span>
-            </div>
-            <div className="result-row">
-              <span className="result-key">Febrero — contratar</span>
-              <span className="result-val">{Math.round(varResult.x2)} hs <span className="tag tag-blue">inv: {Math.round(varResult.i2)} hs</span></span>
-            </div>
-            <div className="result-row">
-              <span className="result-key">Marzo — contratar</span>
-              <span className="result-val">{Math.round(varResult.x3)} hs <span className="tag tag-blue">inv: {Math.round(varResult.i3)} hs</span></span>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10, marginBottom: 12 }}>
+              {varResult.production.map((x, i) => (
+                <div key={i} className="result-row" style={{ padding: '8px 12px', background: 'var(--surface-0)', borderRadius: 'var(--radius)' }}>
+                  <span className="result-key" style={{ marginBottom: 4, display: 'block' }}>{getMonthName(params.startMonth, i)}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span className="result-val" style={{ fontSize: 14 }}>{Math.round(x)} hs</span>
+                    <span className="tag tag-blue" style={{ fontSize: 10 }}>inv: {Math.round(varResult.inventory[i])} hs</span>
+                  </div>
+                </div>
+              ))}
             </div>
             <div className="divider" />
             <div className="result-row">
               <span className="result-key">Costo de contratación</span>
-              <span className="result-val">{fmt(params.ch * (varResult.x1 + varResult.x2 + varResult.x3))}</span>
+              <span className="result-val">{fmt(params.ch * varResult.production.reduce((a, b) => a + b, 0))}</span>
             </div>
             <div className="result-row">
               <span className="result-key">Costo de mantenimiento</span>
-              <span className="result-val">{fmt(params.cm * (varResult.i1 + varResult.i2 + varResult.i3))}</span>
+              <span className="result-val">{fmt(params.cm * varResult.inventory.reduce((a, b) => a + b, 0))}</span>
             </div>
             <div className="result-row">
               <span className="result-key" style={{ fontWeight: 600 }}>Costo total óptimo</span>
@@ -269,7 +283,6 @@ export default function Escenarios() {
           </div>
         )}
 
-        {/* Alerta de recomendación */}
         {!infact && diff !== null && (
           <div className={`alert ${diff > costBase * 0.15 ? 'alert-danger' : diff > 0 ? 'alert-warning' : 'alert-success'}`} style={{ marginTop: 16 }}>
             <i className={`ti ti-${diff > costBase * 0.15 ? 'alert-circle' : diff > 0 ? 'alert-triangle' : 'check'}`} />

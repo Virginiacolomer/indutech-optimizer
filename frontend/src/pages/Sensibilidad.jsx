@@ -5,20 +5,14 @@ import { exportToPdf } from '../components/pdfExport.js';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
 
-const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-];
-
 const PARAMS_META = {
   ch: { label: 'Costo contratar ($/hs)', min: 10, max: 150 },
   cm: { label: 'Costo mantener ($/hs/mes)', min: 1, max: 80 },
-  inv0: { label: 'Inventario inicial (hs)', min: 0, max: 100 },
-  cap: { label: 'Capacidad máxima (hs/mes)', min: 50, max: 200 },
+  inv0: { label: 'Inventario inicial (hs)', min: 0, max: 744 },
+  cap: { label: 'Capacidad máxima (hs/mes)', min: 0, max: 744 },
 };
 
-const BASE_DEMANDS = [80, 60, 40];
-const BASE = { demands: BASE_DEMANDS, inv0: 50, ch: 50, cm: 20, cap: 100 };
+import { useParamsContext, getMonthName } from '../context/ParamsContext.jsx';
 
 /**
  * Local solver for sensitivity analysis.
@@ -26,26 +20,47 @@ const BASE = { demands: BASE_DEMANDS, inv0: 50, ch: 50, cm: 20, cap: 100 };
  */
 function solveLocal({ demands, inv0, ch, cm, cap }) {
   const n = demands.length;
+  const numCap = Number(cap);
+  const numInv0 = Number(inv0);
+  const numCh = Number(ch);
+  const numCm = Number(cm);
+  
+  const minInv = new Array(n).fill(0);
+  let req = 0;
+  for (let t = n - 1; t >= 0; t--) {
+    const d = Number(demands[t]);
+    req = Math.max(0, d + req - numCap);
+    minInv[t] = req;
+  }
+  
+  if (numInv0 < minInv[0]) return null;
+  
   const production = [];
   const inventory = [];
-  let prevInv = inv0;
-
+  let prev = numInv0;
+  
   for (let t = 0; t < n; t++) {
-    const needed = demands[t] - prevInv;
+    const d = Number(demands[t]);
+    const nextReq = t < n - 1 ? minInv[t+1] : 0;
+    const needed = d + nextReq - prev;
+    
     let x = Math.max(0, needed);
-    x = Math.min(x, cap);
-    const inv = prevInv + x - demands[t];
-    if (inv < 0) return null;
+    x = Math.min(x, numCap);
+    const inv = prev + x - d;
+    
+    if (inv < 0 || inv > numCap) return null;
+    
     production.push(x);
     inventory.push(inv);
-    prevInv = inv;
+    prev = inv;
   }
-
-  const cost = production.reduce((s, x) => s + ch * x, 0) + inventory.reduce((s, i) => s + cm * i, 0);
+  
+  const cost = production.reduce((s, x) => s + numCh * x, 0) + inventory.reduce((s, i) => s + numCm * i, 0);
   return cost;
 }
 
 export default function Sensibilidad() {
+  const { params: BASE } = useParamsContext();
   const [selectedParam, setSelectedParam] = useState('ch');
   const [chartPoints, setChartPoints] = useState({ xs: [], ys: [] });
   const [insight, setInsight] = useState(null);
@@ -53,11 +68,11 @@ export default function Sensibilidad() {
 
   // Add per-demand sensitivity options dynamically
   const allParams = { ...PARAMS_META };
-  BASE_DEMANDS.forEach((_, i) => {
-    allParams[`demand_${i}`] = { label: `Demanda ${MONTH_NAMES[i]} (hs)`, min: 20, max: 150 };
+  BASE.demands.forEach((_, i) => {
+    allParams[`demand_${i}`] = { label: `Demanda ${getMonthName(BASE.startMonth, i)} (hs)`, min: 0, max: 744 };
   });
 
-  const compute = useCallback((param) => {
+  const compute = useCallback((param, baseConfig) => {
     const meta = allParams[param];
     if (!meta) return;
     const pts = 40;
@@ -68,11 +83,11 @@ export default function Sensibilidad() {
       let pp;
       if (param.startsWith('demand_')) {
         const idx = parseInt(param.split('_')[1]);
-        const newDemands = [...BASE_DEMANDS];
+        const newDemands = [...baseConfig.demands];
         newDemands[idx] = v;
-        pp = { ...BASE, demands: newDemands };
+        pp = { ...baseConfig, demands: newDemands };
       } else {
-        pp = { ...BASE, [param]: v };
+        pp = { ...baseConfig, [param]: v };
       }
       const cost = solveLocal(pp);
       xs.push(Math.round(v));
@@ -80,13 +95,13 @@ export default function Sensibilidad() {
     }
     const valid = ys.filter(v => v !== null);
     const range = valid.length > 0 ? Math.max(...valid) - Math.min(...valid) : 0;
-    const baseC = solveLocal(BASE) || 1;
+    const baseC = solveLocal(baseConfig) || 1;
     const pct = Math.round(range / baseC * 100);
     setChartPoints({ xs, ys });
     setInsight({ pct, label: meta.label });
-  }, []);
+  }, [allParams]);
 
-  useEffect(() => { compute(selectedParam); }, [selectedParam, compute]);
+  useEffect(() => { compute(selectedParam, BASE); }, [selectedParam, compute, BASE]);
 
   async function descargarPdf() {
     setExporting(true);
@@ -101,11 +116,12 @@ export default function Sensibilidad() {
     datasets: [{ label: 'Costo óptimo', data: chartPoints.ys, borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true, backgroundColor: 'rgba(42,120,214,0.07)' }]
   };
   const chartOpts = {
-    responsive: true, maintainAspectRatio: false, animation: false,
+    responsive: true, maintainAspectRatio: false,
+    animation: { duration: 200, easing: 'easeOutQuart' },
     plugins: { legend: { display: false } },
     scales: {
       x: { grid: { color: '#e8e7e4' }, ticks: { font: { size: 10 }, maxTicksLimit: 8 }, title: { display: true, text: currentMeta.label, font: { size: 11 } } },
-      y: { grid: { color: '#e8e7e4' }, ticks: { font: { size: 10 }, callback: v => '$' + Math.round(v / 1000) + 'k' } }
+      y: { grid: { color: '#e8e7e4' }, ticks: { font: { size: 10 }, callback: v => '$ ' + Math.round(v).toLocaleString('es-AR') } }
     }
   };
 

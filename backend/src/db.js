@@ -22,6 +22,16 @@ async function initDB() {
         DROP TABLE IF EXISTS escenarios_guardados CASCADE;
         DROP TABLE IF EXISTS simulaciones CASCADE;
       `);
+    } else {
+      // Safe migration for mes_inicio
+      const { rows: rowsMesInicio } = await client.query(`
+        SELECT column_name FROM information_schema.columns
+        WHERE table_name = 'simulaciones' AND column_name = 'mes_inicio'
+      `);
+      if (rowsMesInicio.length === 0) {
+        console.log('Agregando columna mes_inicio a simulaciones...');
+        await client.query(`ALTER TABLE simulaciones ADD COLUMN mes_inicio INTEGER NOT NULL DEFAULT 0;`);
+      }
     }
 
     await client.query(`
@@ -29,6 +39,7 @@ async function initDB() {
         id SERIAL PRIMARY KEY,
         nombre VARCHAR(100),
         num_periodos INTEGER NOT NULL DEFAULT 3,
+        mes_inicio INTEGER NOT NULL DEFAULT 0,
         demandas JSONB NOT NULL,
         inventario_inicial INTEGER NOT NULL,
         costo_contratar NUMERIC NOT NULL,

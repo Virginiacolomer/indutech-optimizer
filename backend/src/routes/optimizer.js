@@ -5,7 +5,7 @@ const { solveLP, calcularEscenarios } = require('../solver');
 
 // POST /api/optimizer/solve — resuelve y guarda en DB
 router.post('/solve', async (req, res) => {
-  const { nombre, demands, inv0, ch, cm, cap } = req.body;
+  const { nombre, demands, inv0, ch, cm, cap, startMonth = 0 } = req.body;
 
   if (!demands || !Array.isArray(demands) || demands.length < 1 || demands.length > 12) {
     return res.status(400).json({ error: 'Se requiere un array "demands" con 1 a 12 períodos.' });
@@ -16,7 +16,7 @@ router.post('/solve', async (req, res) => {
 
   const params = {
     demands: demands.map(Number),
-    inv0: Number(inv0), ch: Number(ch), cm: Number(cm), cap: Number(cap)
+    inv0: Number(inv0), ch: Number(ch), cm: Number(cm), cap: Number(cap), startMonth: Number(startMonth)
   };
 
   const resultado = solveLP(params);
@@ -28,14 +28,15 @@ router.post('/solve', async (req, res) => {
   try {
     const { rows } = await pool.query(
       `INSERT INTO simulaciones
-        (nombre, num_periodos, demandas, inventario_inicial,
+        (nombre, num_periodos, mes_inicio, demandas, inventario_inicial,
          costo_contratar, costo_mantener, capacidad_maxima,
          resultado_costo, resultado_produccion, resultado_inventario)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
        RETURNING id`,
       [
         nombre || 'Sin nombre',
         params.demands.length,
+        params.startMonth,
         JSON.stringify(params.demands),
         params.inv0, params.ch, params.cm, params.cap,
         resultado.cost,

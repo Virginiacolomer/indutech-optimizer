@@ -3,32 +3,31 @@ import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip } from 'chart.js';
 import { api } from '../api.js';
 import { exportToPdf } from '../components/pdfExport.js';
+import { getMonthName } from '../context/ParamsContext.jsx';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
-const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-];
-
-function fmt(n) { return n == null ? '—' : '$' + Math.round(n).toLocaleString('es-AR'); }
+function fmt(n) { return n == null ? '—' : '$ ' + Math.round(n).toLocaleString('es-AR'); }
 function fmtDate(d) { return new Date(d).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' }); }
 
 function SimCard({ row, onDelete }) {
   const [exporting, setExporting] = useState(false);
   const cardId = `sim-card-${row.id}`;
 
-  const demandas = row.demandas || [];
-  const produccion = row.resultado_produccion || [];
-  const inventario = row.resultado_inventario || [];
+  // Compatibilidad con registros viejos (3 meses fijos) y nuevos (arrays de meses)
+  const demandas = row.demandas || (row.demanda_enero != null ? [row.demanda_enero, row.demanda_febrero, row.demanda_marzo] : []);
+  const produccion = row.resultado_produccion || (row.resultado_x1 != null ? [row.resultado_x1, row.resultado_x2, row.resultado_x3] : []);
+  const inventario = row.resultado_inventario || (row.resultado_i1 != null ? [row.resultado_i1, row.resultado_i2, row.resultado_i3] : []);
+  
   const numPeriods = row.num_periodos || demandas.length;
-  const labels = demandas.map((_, i) => MONTH_NAMES[i] || `Mes ${i + 1}`);
+  const startMonth = row.mes_inicio || 0;
+  const labels = demandas.map((_, i) => getMonthName(startMonth, i));
 
   const chartData = {
     labels,
     datasets: [
-      { label: 'Contratar', data: produccion.map(v => +v || 0), backgroundColor: '#ff6b00', borderRadius: 3, maxBarThickness: 24 },
-      { label: 'Inventario', data: inventario.map(v => +v || 0), backgroundColor: '#111115', borderRadius: 3, maxBarThickness: 24 },
+      { label: 'Contratar', data: produccion.map(v => +v || 0), backgroundColor: '#2a78d6', borderRadius: 3, maxBarThickness: 24 },
+      { label: 'Inventario', data: inventario.map(v => +v || 0), backgroundColor: '#1baf7a', borderRadius: 3, maxBarThickness: 24 },
     ]
   };
   const chartOpts = {
@@ -66,9 +65,8 @@ function SimCard({ row, onDelete }) {
       <div className="grid-2" style={{ marginBottom: 0 }}>
         <div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>Parámetros utilizados</div>
-          <div className="result-row">
-            <span className="result-key">Demandas</span>
-            <span className="result-val">{demandas.map((d, i) => `${MONTH_NAMES[i]?.slice(0, 3) || `M${i + 1}`}: ${d}`).join(' / ')} hs</span>
+          <div className="result-row"><span className="result-key">Demandas</span>
+            <span className="result-val">{demandas.map((d, i) => `${getMonthName(startMonth, i).slice(0, 3)}: ${d}`).join(' / ')} hs</span>
           </div>
           <div className="result-row"><span className="result-key">Inventario inicial</span><span className="result-val">{row.inventario_inicial} hs</span></div>
           <div className="result-row"><span className="result-key">Costo contratar</span><span className="result-val">${row.costo_contratar}/hs</span></div>

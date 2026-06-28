@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip } from 'chart.js';
 import { exportToPdf } from '../components/pdfExport.js';
+import { useParamsContext, getMonthName } from '../context/ParamsContext.jsx';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
 
@@ -11,8 +12,6 @@ const PARAMS_META = {
   inv0: { label: 'Inventario inicial (hs)', min: 0, max: 744 },
   cap: { label: 'Capacidad máxima (hs/mes)', min: 0, max: 744 },
 };
-
-import { useParamsContext, getMonthName } from '../context/ParamsContext.jsx';
 
 /**
  * Local solver for sensitivity analysis.
@@ -24,7 +23,7 @@ function solveLocal({ demands, inv0, ch, cm, cap }) {
   const numInv0 = Number(inv0);
   const numCh = Number(ch);
   const numCm = Number(cm);
-  
+
   const minInv = new Array(n).fill(0);
   let req = 0;
   for (let t = n - 1; t >= 0; t--) {
@@ -32,29 +31,29 @@ function solveLocal({ demands, inv0, ch, cm, cap }) {
     req = Math.max(0, d + req - numCap);
     minInv[t] = req;
   }
-  
+
   if (numInv0 < minInv[0]) return null;
-  
+
   const production = [];
   const inventory = [];
   let prev = numInv0;
-  
+
   for (let t = 0; t < n; t++) {
     const d = Number(demands[t]);
-    const nextReq = t < n - 1 ? minInv[t+1] : 0;
+    const nextReq = t < n - 1 ? minInv[t + 1] : 0;
     const needed = d + nextReq - prev;
-    
+
     let x = Math.max(0, needed);
     x = Math.min(x, numCap);
     const inv = prev + x - d;
-    
+
     if (inv < 0 || inv > numCap) return null;
-    
+
     production.push(x);
     inventory.push(inv);
     prev = inv;
   }
-  
+
   const cost = production.reduce((s, x) => s + numCh * x, 0) + inventory.reduce((s, i) => s + numCm * i, 0);
   return cost;
 }

@@ -11,10 +11,10 @@ const MONTH_NAMES = [
 ];
 
 const PARAMS_META = {
-  ch:   { label: 'Costo contratar ($/hs)',     min: 10, max: 150 },
-  cm:   { label: 'Costo mantener ($/hs/mes)',  min: 1,  max: 80 },
-  inv0: { label: 'Inventario inicial (hs)',     min: 0,  max: 100 },
-  cap:  { label: 'Capacidad máxima (hs/mes)',  min: 50, max: 200 },
+  ch: { label: 'Costo contratar ($/hs)', min: 10, max: 150 },
+  cm: { label: 'Costo mantener ($/hs/mes)', min: 1, max: 80 },
+  inv0: { label: 'Inventario inicial (hs)', min: 0, max: 100 },
+  cap: { label: 'Capacidad máxima (hs/mes)', min: 50, max: 200 },
 };
 
 const BASE_DEMANDS = [80, 60, 40];
@@ -104,13 +104,8 @@ export default function Sensibilidad() {
     responsive: true, maintainAspectRatio: false, animation: false,
     plugins: { legend: { display: false } },
     scales: {
-<<<<<<< HEAD
-      x: { grid: { color: '#e8e7e4' }, ticks: { font: { size: 10 }, maxTicksLimit: 8 }, title: { display: true, text: PARAMS_META[selectedParam].label, font: { size: 11 } } },
-      y: { grid: { color: '#e8e7e4' }, ticks: { font: { size: 10 }, callback: v => '$ ' + Math.round(v).toLocaleString('es-AR') } }
-=======
       x: { grid: { color: '#e8e7e4' }, ticks: { font: { size: 10 }, maxTicksLimit: 8 }, title: { display: true, text: currentMeta.label, font: { size: 11 } } },
       y: { grid: { color: '#e8e7e4' }, ticks: { font: { size: 10 }, callback: v => '$' + Math.round(v / 1000) + 'k' } }
->>>>>>> 68fa069 (mas meses añadidos)
     }
   };
 

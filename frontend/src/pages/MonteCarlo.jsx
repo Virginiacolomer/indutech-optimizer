@@ -6,14 +6,9 @@ import { exportToPdf } from '../components/pdfExport.js';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
-<<<<<<< HEAD
-const BASE = { d1: 80, d2: 60, d3: 40, inv0: 50, ch: 50, cm: 20, cap: 100 };
-function fmt(n) { return n == null ? '—' : '$ ' + Math.round(n).toLocaleString('es-AR'); }
-=======
 const BASE_DEMANDS = [80, 60, 40];
 const BASE = { demands: BASE_DEMANDS, inv0: 50, ch: 50, cm: 20, cap: 100 };
-function fmt(n) { return n == null ? '—' : '$' + Math.round(n).toLocaleString('es-AR'); }
->>>>>>> 68fa069 (mas meses añadidos)
+function fmt(n) { return n == null ? '—' : '$ ' + Math.round(n).toLocaleString('es-AR'); }
 
 export default function MonteCarlo() {
   const [variabilidad, setVariabilidad] = useState(20);

@@ -6,16 +6,12 @@ import { exportToPdf } from '../components/pdfExport.js';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
-<<<<<<< HEAD
-function fmt(n) { return n == null ? '—' : '$ ' + Math.round(n).toLocaleString('es-AR'); }
-=======
 const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
 function fmt(n) { return n == null ? '—' : '$' + Math.round(n).toLocaleString('es-AR'); }
->>>>>>> 68fa069 (mas meses añadidos)
 function fmtDate(d) { return new Date(d).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' }); }
 
 function SimCard({ row, onDelete }) {
@@ -31,13 +27,8 @@ function SimCard({ row, onDelete }) {
   const chartData = {
     labels,
     datasets: [
-<<<<<<< HEAD
-      { label: 'Contratar', data: [+row.resultado_x1||0, +row.resultado_x2||0, +row.resultado_x3||0], backgroundColor: '#2a78d6', borderRadius: 3, maxBarThickness: 24 },
-      { label: 'Inventario', data: [+row.resultado_i1||0, +row.resultado_i2||0, +row.resultado_i3||0], backgroundColor: '#1baf7a', borderRadius: 3, maxBarThickness: 24 },
-=======
       { label: 'Contratar', data: produccion.map(v => +v || 0), backgroundColor: '#ff6b00', borderRadius: 3, maxBarThickness: 24 },
       { label: 'Inventario', data: inventario.map(v => +v || 0), backgroundColor: '#111115', borderRadius: 3, maxBarThickness: 24 },
->>>>>>> 68fa069 (mas meses añadidos)
     ]
   };
   const chartOpts = {
@@ -77,7 +68,7 @@ function SimCard({ row, onDelete }) {
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>Parámetros utilizados</div>
           <div className="result-row">
             <span className="result-key">Demandas</span>
-            <span className="result-val">{demandas.map((d, i) => `${MONTH_NAMES[i]?.slice(0, 3) || `M${i+1}`}: ${d}`).join(' / ')} hs</span>
+            <span className="result-val">{demandas.map((d, i) => `${MONTH_NAMES[i]?.slice(0, 3) || `M${i + 1}`}: ${d}`).join(' / ')} hs</span>
           </div>
           <div className="result-row"><span className="result-key">Inventario inicial</span><span className="result-val">{row.inventario_inicial} hs</span></div>
           <div className="result-row"><span className="result-key">Costo contratar</span><span className="result-val">${row.costo_contratar}/hs</span></div>

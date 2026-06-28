@@ -150,8 +150,6 @@ export default function Dashboard() {
   const maxProd = infact ? 0 : Math.max(...r.production);
   const margin = infact ? 0 : Math.round((cap - maxProd) / cap * 100);
 
-<<<<<<< HEAD
-=======
   // Savings vs naive plan (produce exactly demand each month, no inventory optimization)
   const baseCost = ch * Math.max(0, totalDemand - inv0);
   const ahorro = infact ? 0 : Math.max(0, baseCost - r.cost);
@@ -160,10 +158,9 @@ export default function Dashboard() {
 
   const periodLabel = numPeriods === 1 ? '1 mes' :
     numPeriods <= 3 ? `1er trimestre` :
-    numPeriods <= 6 ? `1er semestre` :
-    `${numPeriods} meses`;
+      numPeriods <= 6 ? `1er semestre` :
+        `${numPeriods} meses`;
 
->>>>>>> 68fa069 (mas meses añadidos)
   async function guardar() {
     setSaving(true); setSaveMsg(null);
     try {
@@ -186,13 +183,8 @@ export default function Dashboard() {
   const chartData = {
     labels: chartLabels,
     datasets: [
-<<<<<<< HEAD
-      { label: 'Contratar', data: [Math.round(r.x1||0), Math.round(r.x2||0), Math.round(r.x3||0)], backgroundColor: '#2a78d6', borderRadius: 4, maxBarThickness: 30 },
-      { label: 'Inventario', data: [Math.round(r.i1||0), Math.round(r.i2||0), Math.round(r.i3||0)], backgroundColor: '#1baf7a', borderRadius: 4, maxBarThickness: 30 },
-=======
       { label: 'Contratar', data: infact ? [] : r.production.map(Math.round), backgroundColor: '#ff6b00', borderRadius: 4, maxBarThickness: 30 },
       { label: 'Inventario', data: infact ? [] : r.inventory.map(Math.round), backgroundColor: '#111115', borderRadius: 4, maxBarThickness: 30 },
->>>>>>> 68fa069 (mas meses añadidos)
     ]
   };
   const chartOpts = {
@@ -228,13 +220,6 @@ export default function Dashboard() {
             <div className="kpi-value">{infact ? '—' : totalHired + ' hs'}</div>
             <div className="kpi-sub" style={{ color: 'var(--text-muted)' }}>de {totalDemand} hs demandadas</div>
           </div>
-<<<<<<< HEAD
-          <div className="kpi">
-            <div className="kpi-icon" style={{ background: 'var(--amber-light)', color: 'var(--amber)' }}><i className="ti ti-box" /></div>
-            <div className="kpi-label">Costo mantenimiento</div>
-            <div className="kpi-value">{infact ? '—' : fmt(holdCost)}</div>
-            <div className="kpi-sub" style={{ color: 'var(--text-muted)' }}>horas ociosas: {infact ? '—' : Math.round((r.i1||0)+(r.i2||0)+(r.i3||0))}</div>
-=======
 
           <div className="kpi kpi-purple">
             <div className="kpi-corner-gfx">
@@ -254,7 +239,6 @@ export default function Dashboard() {
                 {holdCost === 0 ? '📦 Sin horas ociosas' : `📦 ${totalInv} hs ociosas`}
               </div>
             </div>
->>>>>>> 68fa069 (mas meses añadidos)
           </div>
           <div className="kpi">
             <div className="kpi-icon" style={{ background: 'var(--red-light)', color: 'var(--red)' }}><i className="ti ti-shield" /></div>
@@ -272,24 +256,6 @@ export default function Dashboard() {
               <span className="panel-title"><i className="ti ti-sliders" />Parámetros</span>
               <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Deslizá o hacé clic en el número</span>
             </div>
-<<<<<<< HEAD
-            <SliderInput label="Demanda enero (hs)" id="d1" min={10} max={150} value={params.d1} onChange={setParam} />
-            <SliderInput label="Demanda febrero (hs)" id="d2" min={10} max={150} value={params.d2} onChange={setParam} />
-            <SliderInput label="Demanda marzo (hs)" id="d3" min={10} max={150} value={params.d3} onChange={setParam} />
-            <div className="divider" />
-            <SliderInput label="Inventario inicial (hs)" id="inv0" min={0} max={100} value={params.inv0} onChange={setParam} />
-            <SliderInput label="Costo contratar ($/hs)" id="ch" min={10} max={150} value={params.ch} onChange={setParam} />
-            <SliderInput label="Costo mantener ($/hs/mes)" id="cm" min={1} max={80} value={params.cm} onChange={setParam} />
-            <SliderInput label="Capacidad máxima (hs/mes)" id="cap" min={50} max={200} step={5} value={params.cap} onChange={setParam} />
-            <div className="divider" />
-            {saveMsg && <div className={`alert alert-${saveMsg.type}`} style={{ marginBottom: 8 }}><i className={`ti ti-${saveMsg.type === 'success' ? 'check' : 'alert-circle'}`} />{saveMsg.text}</div>}
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input type="text" placeholder="Nombre de la simulación (opcional)" value={nombre} onChange={e => setNombre(e.target.value)} />
-              <button className="btn btn-primary" onClick={guardar} disabled={saving || infact} style={{ whiteSpace: 'nowrap' }}>
-                {saving ? <span className="spinner" /> : <i className="ti ti-device-floppy" />}
-                Guardar
-              </button>
-=======
             <div className="panel-body">
               <div className="param-section-title" style={{ marginTop: 0 }}>PERÍODOS DE PLANIFICACIÓN</div>
               <SliderInput label="Cantidad de meses" id="numPeriods" min={1} max={12} value={numPeriods} onChange={handleNumPeriodsChange} icon="ti-calendar-stats" />
@@ -298,7 +264,7 @@ export default function Dashboard() {
               {demands.map((d, i) => (
                 <SliderInput
                   key={i}
-                  label={`Demanda ${MONTH_NAMES[i] || `Mes ${i+1}`} (hs)`}
+                  label={`Demanda ${MONTH_NAMES[i] || `Mes ${i + 1}`} (hs)`}
                   id={i}
                   min={10}
                   max={150}
@@ -307,13 +273,13 @@ export default function Dashboard() {
                   icon="ti-calendar"
                 />
               ))}
-              
+
               <div className="param-section-title">RECURSOS Y COSTOS</div>
               <SliderInput label="Inventario inicial (hs)" id="inv0" min={0} max={100} value={inv0} onChange={(_, v) => setInv0(v)} icon="ti-box" />
               <SliderInput label="Costo contratar (S/hs)" id="ch" min={10} max={150} value={ch} onChange={(_, v) => setCh(v)} icon="ti-coin" />
               <SliderInput label="Costo mantener (S/hs/mes)" id="cm" min={1} max={80} value={cm} onChange={(_, v) => setCm(v)} icon="ti-clock" />
               <SliderInput label="Capacidad máxima (hs/mes)" id="cap" min={50} max={200} step={5} value={cap} onChange={(_, v) => setCap(v)} icon="ti-dashboard" />
-              
+
               <div className="divider" style={{ margin: '8px 0' }} />
               {saveMsg && <div className={`alert alert-${saveMsg.type}`} style={{ marginBottom: 8 }}><i className={`ti ti-${saveMsg.type === 'success' ? 'check' : 'alert-circle'}`} />{saveMsg.text}</div>}
               <div style={{ display: 'flex', gap: 8 }}>
@@ -323,31 +289,10 @@ export default function Dashboard() {
                   Guardar
                 </button>
               </div>
->>>>>>> 68fa069 (mas meses añadidos)
             </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-<<<<<<< HEAD
-            <div className="panel">
-              <div className="panel-hd"><span className="panel-title"><i className="ti ti-check" />Solución óptima (PL)</span></div>
-              {infact ? <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>Sin solución con los parámetros actuales.</p> : <>
-                <div className="result-row"><span className="result-key">Enero — contratar</span><span className="result-val">{Math.round(r.x1)} hs <span className="tag tag-blue">inv: {Math.round(r.i1)} hs</span></span></div>
-                <div className="result-row"><span className="result-key">Febrero — contratar</span><span className="result-val">{Math.round(r.x2)} hs <span className="tag tag-blue">inv: {Math.round(r.i2)} hs</span></span></div>
-                <div className="result-row"><span className="result-key">Marzo — contratar</span><span className="result-val">{Math.round(r.x3)} hs <span className="tag tag-blue">inv: {Math.round(r.i3)} hs</span></span></div>
-                <div className="divider" />
-                <div className="result-row"><span className="result-key">Costo contratación</span><span className="result-val">{fmt(params.ch * ((r.x1||0)+(r.x2||0)+(r.x3||0)))}</span></div>
-                <div className="result-row"><span className="result-key">Costo mantenimiento</span><span className="result-val">{fmt(holdCost)}</span></div>
-                <div className="result-row"><span className="result-key" style={{ fontWeight: 600 }}>Total óptimo</span><span className="result-val" style={{ fontSize: 16, color: 'var(--blue)' }}>{fmt(r.cost)}</span></div>
-              </>}
-            </div>
-            <div className="panel">
-              <div className="panel-hd"><span className="panel-title"><i className="ti ti-chart-bar" />Horas por mes</span></div>
-              <div style={{ height: 150 }}><Bar data={chartData} options={chartOpts} /></div>
-              <div style={{ display: 'flex', gap: 14, marginTop: 8 }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-secondary)' }}><span style={{ width: 10, height: 10, borderRadius: 2, background: '#2a78d6', display: 'inline-block' }} />Contratar</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-secondary)' }}><span style={{ width: 10, height: 10, borderRadius: 2, background: '#1baf7a', display: 'inline-block' }} />Inventario</span>
-=======
             <div className="panel" style={{ padding: '12px 14px' }}>
               <div className="panel-hd" style={{ marginBottom: 10 }}>
                 <span className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -358,7 +303,7 @@ export default function Dashboard() {
               {infact ? <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>Sin solución con los parámetros actuales.</p> : <>
                 {r.production.map((x, i) => (
                   <div key={i} className="result-row" style={{ padding: '4px 0', fontSize: 12 }}>
-                    <span className="result-key">{MONTH_NAMES[i] || `Mes ${i+1}`} — contratar</span>
+                    <span className="result-key">{MONTH_NAMES[i] || `Mes ${i + 1}`} — contratar</span>
                     <span className="result-val" style={{ fontWeight: 700 }}>
                       {Math.round(x)} hs
                       <span className="tag" style={{ background: 'var(--blue-light)', color: 'var(--blue-dark)', fontWeight: 700, fontSize: 9, padding: '1px 5px', borderRadius: 4, marginLeft: 6 }}>
@@ -383,7 +328,7 @@ export default function Dashboard() {
                 </div>
               </>}
             </div>
-            
+
             <div className="panel" style={{ padding: '12px 14px' }}>
               <div className="panel-hd" style={{ marginBottom: 12 }}>
                 <span className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -400,7 +345,6 @@ export default function Dashboard() {
               <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text-secondary)', fontWeight: 500 }}><span style={{ width: 8, height: 8, borderRadius: 2, background: '#ff6b00', display: 'inline-block' }} />Contratar</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text-secondary)', fontWeight: 500 }}><span style={{ width: 8, height: 8, borderRadius: 2, background: '#cbd5e1', display: 'inline-block' }} />Inventario</span>
->>>>>>> 68fa069 (mas meses añadidos)
               </div>
             </div>
           </div>

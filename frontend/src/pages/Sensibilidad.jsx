@@ -115,14 +115,30 @@ export default function Sensibilidad() {
     datasets: [{ label: 'Costo óptimo', data: chartPoints.ys, borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true, backgroundColor: 'rgba(42,120,214,0.07)' }]
   };
   const chartOpts = {
-    responsive: true, maintainAspectRatio: false,
+    responsive: true,
+    maintainAspectRatio: false,
+
+    // Mantiene la animación inicial del gráfico en 200ms
     animation: { duration: 200, easing: 'easeOutQuart' },
-    plugins: { legend: { display: false } },
+
+    interaction: {
+      intersect: false,
+      mode: 'index',
+    },
+
+    plugins: {
+      legend: { display: false },
+      // Desactiva la animación únicamente para el globo de texto
+      tooltip: {
+        animation: false
+      }
+    },
     scales: {
       x: { grid: { color: '#e8e7e4' }, ticks: { font: { size: 10 }, maxTicksLimit: 8 }, title: { display: true, text: currentMeta.label, font: { size: 11 } } },
       y: { grid: { color: '#e8e7e4' }, ticks: { font: { size: 10 }, callback: v => '$ ' + Math.round(v).toLocaleString('es-AR') } }
     }
   };
+
 
   return (
     <>

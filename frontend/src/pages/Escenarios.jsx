@@ -4,6 +4,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip } fro
 import SliderInput from '../components/SliderInput.jsx';
 import { exportToPdf } from '../components/pdfExport.js';
 import { useParamsContext, getMonthName } from '../context/ParamsContext.jsx';
+import InfoTooltip from '../components/InfoTooltip.jsx';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
@@ -220,8 +221,15 @@ export default function Escenarios() {
             </div>
 
             <div className="panel">
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
                 Costo óptimo — Demanda {variacion > 0 ? '+' : ''}{variacion}%
+                <InfoTooltip
+                  title="Costo óptimo del escenario"
+                  text={infact
+                    ? "El modelo no puede encontrar una solución con esta variación de demanda. Esto ocurre cuando la demanda supera el límite máximo de horas contratables por mes. Para resolverlo: reducí la variación, aumentá la capacidad máxima en el Dashboard, o aumentá el inventario inicial."
+                    : "Es el costo mínimo alcanzable si la demanda real varía un " + (variacion > 0 ? "+" : "") + variacion + "% respecto a la estimada. Comparalo con el costo base para evaluar cuánto impacto tiene esa variación en el presupuesto."
+                  }
+                />
               </div>
               <div style={{ fontSize: 24, fontWeight: 600, color: infact ? 'var(--red)' : variacion > 0 ? 'var(--red)' : 'var(--green)' }}>
                 {fmt(costVar)}

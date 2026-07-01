@@ -4,6 +4,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip } fro
 import { api } from '../api.js';
 import { exportToPdf } from '../components/pdfExport.js';
 import { useParamsContext } from '../context/ParamsContext.jsx';
+import InfoTooltip from '../components/InfoTooltip.jsx';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
@@ -82,10 +83,34 @@ export default function MonteCarlo() {
           <div className="panel">
             <div className="panel-hd"><span className="panel-title"><i className="ti ti-report-analytics" />Resultados</span></div>
             <div className="mini-metric-grid">
-              <div className="mini-metric"><div className="mini-metric-label">Costo esperado</div><div className="mini-metric-val" style={{ color: 'var(--text-primary)' }}>{fmt(resultado?.mean)}</div></div>
-              <div className="mini-metric"><div className="mini-metric-label">Percentil 95</div><div className="mini-metric-val" style={{ color: 'var(--amber)' }}>{fmt(resultado?.p95)}</div></div>
-              <div className="mini-metric"><div className="mini-metric-label">Costo mínimo</div><div className="mini-metric-val" style={{ color: 'var(--green)' }}>{fmt(resultado?.min)}</div></div>
-              <div className="mini-metric"><div className="mini-metric-label">Costo máximo</div><div className="mini-metric-val" style={{ color: 'var(--red)' }}>{fmt(resultado?.max)}</div></div>
+              <div className="mini-metric">
+                <div className="mini-metric-label" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  Costo esperado
+                  <InfoTooltip title="Costo esperado" text="Es el promedio de todos los escenarios simulados. Representa el costo más probable en la realidad si la demanda varía dentro del rango configurado. Es más realista que el costo óptimo del plan base, porque incorpora la incertidumbre de la demanda." />
+                </div>
+                <div className="mini-metric-val" style={{ color: 'var(--text-primary)' }}>{fmt(resultado?.mean)}</div>
+              </div>
+              <div className="mini-metric">
+                <div className="mini-metric-label" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  Percentil 95
+                  <InfoTooltip title="Percentil 95 (P95)" text="Es el costo que no se supera en el 95% de los escenarios simulados. Solo en el 5% de los casos más desfavorables el costo real va a ser mayor a este número. Se recomienda usarlo como base para definir el presupuesto de seguridad." />
+                </div>
+                <div className="mini-metric-val" style={{ color: 'var(--amber)' }}>{fmt(resultado?.p95)}</div>
+              </div>
+              <div className="mini-metric">
+                <div className="mini-metric-label" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  Costo mínimo
+                  <InfoTooltip title="Costo mínimo" text="Es el costo más bajo obtenido en todas las simulaciones. Representa el mejor escenario posible dentro del rango de variabilidad: cuando la demanda real resulta menor a la estimada. En la práctica es poco probable que se llegue exactamente a este valor." />
+                </div>
+                <div className="mini-metric-val" style={{ color: 'var(--green)' }}>{fmt(resultado?.min)}</div>
+              </div>
+              <div className="mini-metric">
+                <div className="mini-metric-label" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  Costo máximo
+                  <InfoTooltip title="Costo máximo" text="Es el costo más alto obtenido en todas las simulaciones. Representa el peor escenario posible dentro del rango de variabilidad: cuando la demanda real supera en su máximo a la estimada. Sirve para conocer el límite superior de riesgo presupuestario." />
+                </div>
+                <div className="mini-metric-val" style={{ color: 'var(--red)' }}>{fmt(resultado?.max)}</div>
+              </div>
             </div>
             {!resultado && <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 12 }}>Ejecutá la simulación para ver los resultados.</p>}
           </div>

@@ -5,10 +5,17 @@ import { api } from '../api.js';
 import SliderInput from '../components/SliderInput.jsx';
 import { exportToPdf } from '../components/pdfExport.js';
 import { useParamsContext, MONTH_NAMES, getMonthName } from '../context/ParamsContext.jsx';
+import InfoTooltip from '../components/InfoTooltip.jsx';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
 function fmt(n) { return n === Infinity ? '∞' : '$ ' + Math.round(n).toLocaleString('es-AR'); }
+
+function marginInfo(margin) {
+  if (margin >= 20) return 'El plan tiene margen cómodo. Ante un aumento inesperado de demanda, la empresa puede absorberlo sin necesidad de contratar de urgencia ni comprometer la atención al cliente.';
+  if (margin >= 10) return 'El plan está ajustado. Un aumento moderado de demanda podría generar dificultades para responder a tiempo. Considerá aumentar la capacidad máxima o reducir la demanda estimada.';
+  return 'El plan no tiene margen de maniobra. Cualquier variación inesperada puede generar problemas de atención. Se recomienda aumentar la capacidad máxima al menos un 15–20%.';
+}
 
 /**
  * Solver local en frontend usando Simplex via javascript-lp-solver pattern.
@@ -152,25 +159,49 @@ export default function Dashboard() {
         <div className="kpi-grid">
           <div className="kpi">
             <div className="kpi-icon" style={{ background: 'var(--blue-light)', color: 'var(--blue)' }}><i className="ti ti-coin" /></div>
-            <div className="kpi-label">Costo total óptimo</div>
+            <div className="kpi-label" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              Costo total óptimo
+              <InfoTooltip
+                title="Costo total óptimo"
+                text="Este es el presupuesto ideal para cubrir toda la demanda del período al menor costo posible. Incluye lo que se gasta en contratar horas más lo que cuesta mantener las horas que sobran de un mes para el siguiente. No existe ningún plan más barato que cumpla con todos los requisitos."
+              />
+            </div>
             <div className="kpi-value">{infact ? '—' : fmt(r.cost)}</div>
             <div className="kpi-sub" style={{ color: infact ? 'var(--red)' : 'var(--green)' }}>{infact ? 'Infactible' : 'Plan óptimo'}</div>
           </div>
           <div className="kpi">
             <div className="kpi-icon" style={{ background: 'var(--green-light)', color: 'var(--green)' }}><i className="ti ti-clock-hour-4" /></div>
-            <div className="kpi-label">Horas a contratar</div>
+            <div className="kpi-label" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              Horas a contratar
+              <InfoTooltip
+                title="Horas a contratar"
+                text="Es la cantidad total de horas nuevas que hay que incorporar durante el período. No todas se contratan en el mismo mes: el plan distribuye las contrataciones de forma óptima según cuándo se necesitan. Las horas que sobran de un mes pueden usarse en el siguiente, por eso el total contratado puede ser menor a la demanda total."
+              />
+            </div>
             <div className="kpi-value">{infact ? '—' : totalHired + ' hs'}</div>
             <div className="kpi-sub" style={{ color: 'var(--text-muted)' }}>de {totalDemand} hs demandadas</div>
           </div>
           <div className="kpi">
             <div className="kpi-icon" style={{ background: 'var(--amber-light)', color: 'var(--amber)' }}><i className="ti ti-box" /></div>
-            <div className="kpi-label">Costo mantenimiento</div>
+            <div className="kpi-label" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              Costo mantenimiento
+              <InfoTooltip
+                title="Costo de mantenimiento"
+                text="Es el costo de guardar horas disponibles de un mes para el siguiente. Cuando se contrata más de lo que se usa en un mes, las horas sobrantes quedan disponibles para el próximo período pero generan un costo de mantenimiento. Un valor de $ 0 significa que el plan no genera horas ociosas."
+              />
+            </div>
             <div className="kpi-value">{infact ? '—' : fmt(holdCost)}</div>
             <div className="kpi-sub" style={{ color: 'var(--text-muted)' }}>horas ociosas: {infact ? '—' : totalInv}</div>
           </div>
           <div className="kpi">
             <div className="kpi-icon" style={{ background: 'var(--red-light)', color: 'var(--red)' }}><i className="ti ti-shield" /></div>
-            <div className="kpi-label">Margen de seguridad</div>
+            <div className="kpi-label" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              Margen de seguridad
+              <InfoTooltip
+                title={infact ? 'Margen de seguridad' : margin >= 20 ? '✅ Margen adecuado' : margin >= 10 ? '⚠️ Atención' : '🔴 Riesgo alto'}
+                text={infact ? 'No hay solución con los parámetros actuales. No se puede calcular el margen.' : marginInfo(margin)}
+              />
+            </div>
             <div className="kpi-value">{infact ? '—' : margin + '%'}</div>
             <div className="kpi-sub" style={{ color: margin < 10 ? 'var(--red)' : margin < 20 ? 'var(--amber)' : 'var(--green)' }}>
               {infact ? '—' : margin < 10 ? 'Riesgo alto' : margin < 20 ? 'Atención' : 'Adecuado'}
